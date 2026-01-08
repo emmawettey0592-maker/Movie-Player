@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern Movie Player</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body{
+    background: radial-gradient(circle at top, #222, #000);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+}
+
+/* APP */
+.app{
+    width:100%;
+    max-width:960px;
+}
+
+/* HEADER */
+header{
+    text-align:center;
+    padding:14px;
+    font-size:18px;
+    font-weight:600;
+    background:linear-gradient(90deg,#ff0000,#c9b716);
+    border-radius:12px 12px 0 0;
+}
+
+/* PLAYER */
+.player{
+    position:relative;
+    background:#000;
+    border-radius:0 0 14px 14px;
+    overflow:hidden;
+    box-shadow:0 20px 40px rgba(0,0,0,.7);
+}
+
+video{
+    width:100%;
+    display:block;
+}
+
+/* MOVIE TITLE */
+.title{
+    position:absolute;
+    top:12px;
+    left:12px;
+    padding:6px 12px;
+    font-size:14px;
+    background:rgba(0,0,0,.6);
+    border-radius:20px;
+    backdrop-filter: blur(5px);
+}
+
+/* CONTROLS */
+.controls{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    padding:12px;
+    background:linear-gradient(to top, rgba(0,0,0,.85), transparent);
+}
+
+/* PROGRESS */
+.progress-container{
+    width:100%;
+    height:6px;
+    background:#333;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.progress{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,#ff0000,#ff6a00);
+    border-radius:10px;
+}
+
+/* BUTTON ROW */
+.buttons{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+}
+
+.left,.right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+button,a{
+    background:rgba(255,255,255,.1);
+    border:none;
+    color:white;
+    padding:8px 10px;
+    font-size:16px;
+    border-radius:50%;
+    cursor:pointer;
+    transition:.3s;
+    text-decoration:none;
+}
+
+button:hover,a:hover{
+    background:#ff0000;
+}
+
+.time{
+    font-size:13px;
+    opacity:.85;
+}
+
+input[type=range]{
+    width:90px;
+}
+
+/* PLAYLIST */
+.playlist{
+    margin-top:12px;
+    background:#111;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.playlist div{
+    padding:12px;
+    cursor:pointer;
+    border-bottom:1px solid #222;
+    transition:.3s;
+}
+
+.playlist div:hover{
+    background:#222;
+}
+
+.playlist .active{
+    background:linear-gradient(90deg,#ff0000,#ff6a00);
+}
+
+/* MOBILE */
+@media(max-width:600px){
+    header{font-size:16px;}
+    input[type=range]{width:60px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>🎬 Modern Movie Player</header>
+
+<div class="player">
+    <video id="video" poster="poster.jpg">
+        <source src="VID-20251218-WA0005.mp4" type="video/mp4">
+    </video>
+
+    <div class="title" id="movieTitle">Programming Tutorials</div>
+
+    <div class="controls">
+        <div class="progress-container" id="progressContainer">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div class="buttons">
+            <div class="left">
+                <button id="playPause">▶</button>
+                <span class="time" id="time">0:00 / 0:00</span>
+                <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
+            </div>
+
+            <div class="right">
+                <a id="download" title="Download">⬇</a>
+                <button id="fullscreen" title="Fullscreen">⛶</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PLAYLIST -->
+<div class="playlist">
+    <div class="active" data-src="VID-20251218-WA0005.mp4">Programming Tutorial 1</div>
+    <div data-src="VID-20260105-WA0003.mp4">Programming Tutorial 2</div>
+</div>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+const playPause = document.getElementById("playPause");
+const progress = document.getElementById("progress");
+const progressContainer = document.getElementById("progressContainer");
+const volume = document.getElementById("volume");
+const fullscreen = document.getElementById("fullscreen");
+const time = document.getElementById("time");
+const download = document.getElementById("download");
+const title = document.getElementById("movieTitle");
+const playlist = document.querySelectorAll(".playlist div");
+
+playPause.onclick = () => {
+    if(video.paused){
+        video.play();
+        playPause.textContent="⏸";
+    }else{
+        video.pause();
+        playPause.textContent="▶";
+    }
+};
+
+video.ontimeupdate = () => {
+    progress.style.width = (video.currentTime / video.duration)*100 + "%";
+    time.textContent = format(video.currentTime)+" / "+format(video.duration);
+};
+
+progressContainer.onclick = e => {
+    video.currentTime = (e.offsetX / progressContainer.clientWidth) * video.duration;
+};
+
+volume.oninput = () => video.volume = volume.value;
+
+fullscreen.onclick = () => video.requestFullscreen();
+
+download.onclick = () => download.href = video.currentSrc;
+
+playlist.forEach(item=>{
+    item.onclick = () => {
+        playlist.forEach(i=>i.classList.remove("active"));
+        item.classList.add("active");
+        video.src = item.dataset.src;
+        title.textContent = item.textContent;
+        video.play();
+        playPause.textContent="⏸";
+    };
+});
+
+function format(sec){
+    if(isNaN(sec)) return "0:00";
+    let m = Math.floor(sec/60);
+    let s = Math.floor(sec%60);
+    return m+":"+(s<10?"0"+s:s);
+}
+</script>
+
+</body>
+</html>
